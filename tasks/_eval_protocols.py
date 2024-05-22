@@ -1,11 +1,12 @@
 import numpy as np
-from sklearn.linear_model import Ridge
-from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+
 
 def fit_svm(features, y, MAX_SAMPLES=10000):
     nb_classes = np.unique(y, return_counts=True)[1].shape[0]
@@ -17,10 +18,7 @@ def fit_svm(features, y, MAX_SAMPLES=10000):
     else:
         grid_search = GridSearchCV(
             svm, {
-                'C': [
-                    0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000,
-                    np.inf
-                ],
+                'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 1e5],
                 'kernel': ['rbf'],
                 'degree': [3],
                 'gamma': ['scale'],
@@ -45,9 +43,10 @@ def fit_svm(features, y, MAX_SAMPLES=10000):
             )
             features = split[0]
             y = split[2]
-            
+
         grid_search.fit(features, y)
         return grid_search.best_estimator_
+
 
 def fit_lr(features, y, MAX_SAMPLES=100000):
     # If the training set is too large, subsample MAX_SAMPLES examples
@@ -58,7 +57,7 @@ def fit_lr(features, y, MAX_SAMPLES=100000):
         )
         features = split[0]
         y = split[2]
-        
+
     pipe = make_pipeline(
         StandardScaler(),
         LogisticRegression(
@@ -70,6 +69,7 @@ def fit_lr(features, y, MAX_SAMPLES=100000):
     pipe.fit(features, y)
     return pipe
 
+
 def fit_knn(features, y):
     pipe = make_pipeline(
         StandardScaler(),
@@ -77,6 +77,7 @@ def fit_knn(features, y):
     )
     pipe.fit(features, y)
     return pipe
+
 
 def fit_ridge(train_features, train_y, valid_features, valid_y, MAX_SAMPLES=100000):
     # If the training set is too large, subsample MAX_SAMPLES examples
@@ -94,7 +95,7 @@ def fit_ridge(train_features, train_y, valid_features, valid_y, MAX_SAMPLES=1000
         )
         valid_features = split[0]
         valid_y = split[2]
-    
+
     alphas = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
     valid_results = []
     for alpha in alphas:
@@ -103,7 +104,7 @@ def fit_ridge(train_features, train_y, valid_features, valid_y, MAX_SAMPLES=1000
         score = np.sqrt(((valid_pred - valid_y) ** 2).mean()) + np.abs(valid_pred - valid_y).mean()
         valid_results.append(score)
     best_alpha = alphas[np.argmin(valid_results)]
-    
+
     lr = Ridge(alpha=best_alpha)
     lr.fit(train_features, train_y)
     return lr
